@@ -1,0 +1,59 @@
+---
+description: NestJS backend conventions — layers, interfaces, types, and checks
+globs: backend/**/*.ts
+alwaysApply: false
+---
+
+# Backend standards
+
+The backend uses a **layered** architecture (not feature modules). Each layer is
+a top-level folder under `backend/src/` with its own barrel `index.ts`.
+
+## Folder responsibilities
+
+| Folder | Holds | Import from |
+|--------|-------|-------------|
+| `controllers/` | HTTP routing only; delegate to services | `@/controllers` |
+| `services/` | business logic + data access | `@/services` |
+| `entities/` | TypeORM entities | `@/entities` |
+| `enums/` | DB/domain enums (`Locale`, `TicketStatus`, …) | `@/enums` |
+| `dtos/` | request DTOs + Swagger response DTOs | `@/dtos` |
+| `interfaces/` | `interface` shapes (`I` prefix) | `@/interfaces` |
+| `types/` | `type` aliases / string unions | `@/types` |
+| `guards/`, `strategies/`, `decorators/` | auth + cross-cutting | `@/guards`, etc. |
+| `utilities/` | interceptor, filter, swagger helpers | `@/utilities` |
+| `modules/` | Nest module wiring | `@/modules` |
+| `config/` | typed env configuration | `@/config/configuration` |
+
+## Interfaces & types
+
+- Do **not** define `interface`, `type`, or exported enums inside
+  `controllers/`, `services/`, `guards/`, `strategies/`, `decorators/`, or `modules/`.
+- `interface` → `interfaces/*.ts`, name with `I` prefix (e.g. `IAuthUser`).
+- `type` / string unions → `types/*.ts`.
+- DB/domain enums → `enums/*.ts`.
+- Mirror domain names (e.g. `interfaces/ticket.ts`) and export from the folder barrel.
+
+## Layering
+
+- Controllers: HTTP only. Use `@CurrentUser()` + guards; return plain data (the
+  global interceptor wraps it). Mark SSE/raw routes with `@SkipSuccessWrapper()`.
+- Services: own all business logic and TypeORM access. State transitions on
+  tickets/reservations must stay race-safe (conditional UPDATE inside a transaction).
+- Reuse `JwtAuthGuard`, `RateLimitGuard`, and the `jwt` strategy — do not duplicate auth.
+
+## Aliases & build
+
+- Use the `@/` alias. The build (`nest build && tsc-alias`) rewrites it for runtime;
+  tests resolve it via the jest `moduleNameMapper`.
+
+## Verification
+
+```bash
+cd backend && npm run build
+cd backend && npm test
+# integration tests need Postgres:
+# RUN_DB_TESTS=true DATABASE_HOST=localhost DATABASE_PORT=5433 npm test
+```
+
+After changing routes/DTOs, regenerate the spec: `npm run generate:openapi`.

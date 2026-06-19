@@ -1,0 +1,48 @@
+---
+description: Repo-wide coding standards for every Cursor session
+alwaysApply: true
+---
+
+# Project standards
+
+Apply to all work in this repository unless a scoped rule overrides.
+
+## Layout
+
+- `backend/` — NestJS + TypeORM API (layered architecture).
+- `ui/` — React + Vite single-page app.
+- `docker-compose.yml` brings up Postgres + backend + ui.
+
+## Naming
+
+- Use descriptive names. Avoid single-letter identifiers (i, j, x) except in trivial math.
+- Loop indices should be readable (`index`, `ticketIndex`).
+- Prefer clarity over brevity.
+
+## Architecture
+
+- Minimize scope: smallest correct diff; do not change unrelated code.
+- Reuse existing patterns, barrel exports, and the `@/` path alias (maps to `src/`).
+- Do not over-engineer abstractions for one-off use.
+- Keep the in-process model intact (in-memory cache, in-process SSE bus, timer-based reaper). Do not reintroduce Redis or extra infra without being asked.
+
+## Imports & exports
+
+- Use barrel exports: add new public APIs to the folder's `index.ts`
+  (`@/interfaces`, `@/services`, `@/entities`, `@/apis`, etc.).
+- Import the `@/` alias rather than long relative paths.
+- Do not import domain types from service/controller/component files — import them from the dedicated `interfaces`/`types` folders.
+
+## API response shape
+
+- The backend wraps every success in `{ status, statusCode, message, entity }`
+  and every error in `{ status: false, statusCode, message, error }`.
+- New raw/streaming endpoints (e.g. SSE) must opt out with `@SkipSuccessWrapper()`.
+- The UI unwraps `entity` centrally in `@/utilities` (`unwrapApiEntity`); keep new API calls going through `apiGet`/`apiPost`.
+
+## After writing code
+
+- Backend: `cd backend && npm run build` and `npm test`.
+- UI: `cd ui && npm run tsc` (and `npm run build` for a full check).
+- Run ESLint with `--fix` on edited backend paths.
+- Only create git commits when the user explicitly asks.

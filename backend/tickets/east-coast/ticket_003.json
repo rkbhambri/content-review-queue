@@ -1,0 +1,7 @@
+{
+  "title": "Owner name normalization",
+  "category": "data-quality",
+  "priority": "low",
+  "submittedBy": "agent-077",
+  "content": "Philadelphia record lists owner as a trust; needs entity-type normalization."
+}

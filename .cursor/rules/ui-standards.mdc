@@ -1,0 +1,49 @@
+---
+description: React + Vite UI conventions — structure, interfaces, types, and checks
+globs: ui/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# UI standards
+
+The UI is a React + Vite SPA under `ui/src/`, using the `@/` alias (maps to `ui/src/`).
+
+## File placement
+
+| Kind | Location | Import from |
+|------|----------|-------------|
+| Root app + pages | `app/` | `@/app/...` |
+| React components | `components/<feature>/` | `@/components` |
+| API clients | `apis/` (+ endpoint paths in `apis/urls/`) | `@/apis` |
+| Hooks | `hooks/` | `@/hooks` |
+| `interface` shapes | `interfaces/*.ts` | `@/interfaces` |
+| `type` aliases / unions | `types/*.ts` | `@/types` |
+| Runtime constants | `constants/*.ts` | `@/constants` |
+| Helpers (axios, storage) | `utilities/*.ts` | `@/utilities` |
+| Global styles | `styles/` | imported in `main.tsx` |
+
+Every folder has a barrel `index.ts`; add new public exports there.
+
+## Interfaces & types
+
+- Do not define `interface`, `type`, or exported prop aliases inside
+  `components/` or `app/`.
+- `interface` → `interfaces/*.ts`; component props use `I` prefix + `Props` suffix
+  (e.g. `ITicketCardProps`).
+- String unions / aliases → `types/*.ts` (e.g. `Locale`, `TicketStatus`).
+- Unexported shapes used in a single file may stay local.
+
+## Data fetching
+
+- All HTTP goes through `apiGet`/`apiPost` in `@/utilities`, which attach the
+  bearer token and unwrap the backend `{ status, entity }` envelope.
+- Keep endpoint path strings in `apis/urls/`; keep call functions in `apis/`.
+- SSE uses the native `EventSource` via `useTicketStream`; the token is passed as
+  the `access_token` query param.
+
+## Verification
+
+```bash
+cd ui && npm run tsc
+cd ui && npm run build
+```

@@ -1,0 +1,403 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "AppController_health",
+        "summary": "Liveness probe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "summary": "Authenticate a reviewer",
+        "description": "Simulated login. Returns a JWT carrying the reviewer id and locale, used to scope all subsequent requests.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated; returns an access token."
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/tickets/available": {
+      "get": {
+        "operationId": "TicketsController_listAvailable",
+        "summary": "List claimable tickets for the authenticated reviewer (locale-scoped)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TicketDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "tickets"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/tickets/active": {
+      "get": {
+        "operationId": "TicketsController_listActive",
+        "summary": "The reviewer's active holds (active)",
+        "description": "Let the UI restore held tickets after a page refresh. Expired holds are swept out first.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservationResultDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "tickets"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/tickets/{id}/reserve": {
+      "post": {
+        "operationId": "TicketsController_reserve",
+        "summary": "Reserve an available ticket",
+        "description": "Atomically claims the ticket and holds it for the reservation TTL (default 20 min).",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationResultDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Ticket belongs to a different locale."
+          },
+          "404": {
+            "description": "Ticket not found."
+          },
+          "409": {
+            "description": "Ticket is no longer available."
+          },
+          "429": {
+            "description": "Rate limit exceeded."
+          }
+        },
+        "tags": [
+          "tickets"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/tickets/{id}/confirm": {
+      "post": {
+        "operationId": "TicketsController_confirm",
+        "summary": "Confirm processing of a reserved ticket",
+        "description": "Must be called within the reservation window, by the reviewer who holds it.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationResultDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No reservation for this ticket by you."
+          },
+          "409": {
+            "description": "Reservation already confirmed / not confirmable."
+          },
+          "410": {
+            "description": "Reservation window expired; ticket re-queued."
+          }
+        },
+        "tags": [
+          "tickets"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/tickets/stream": {
+      "get": {
+        "operationId": "TicketsController_stream",
+        "summary": "Real-time, locale-scoped ticket events (SSE)",
+        "description": "Server-Sent Events stream. Because EventSource cannot set headers, pass the JWT via the `access_token` query parameter.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "tickets"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/metrics": {
+      "get": {
+        "operationId": "MetricsController_getMetrics",
+        "summary": "Queue health metrics",
+        "description": "Aggregate counts of tickets by status and locale plus reservation lifecycle counts. Public (no auth) for easy monitoring.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Queue health snapshot."
+          }
+        },
+        "tags": [
+          "metrics"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Content Review Queue API",
+    "description": "Locale-based content review queue. Reviewers authenticate with a locale, browse locale-scoped tickets, reserve one (held for the TTL), and confirm within the window before it auto-releases back to the queue.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Reviewer authentication"
+    },
+    {
+      "name": "tickets",
+      "description": "Browse, reserve, confirm, and stream tickets"
+    },
+    {
+      "name": "metrics",
+      "description": "Queue health metrics"
+    },
+    {
+      "name": "health",
+      "description": "Service liveness"
+    }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "reviewerId": {
+            "type": "string",
+            "example": "reviewer-1",
+            "description": "Human-friendly reviewer identifier."
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "west-coast",
+              "east-coast",
+              "midwest",
+              "south"
+            ],
+            "example": "west-coast",
+            "description": "Locale the reviewer is assigned to. Scopes everything they can see/claim."
+          }
+        },
+        "required": [
+          "reviewerId",
+          "locale"
+        ]
+      },
+      "TicketDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "externalRef": {
+            "type": "string",
+            "example": "west-coast/ticket_001"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "west-coast",
+              "east-coast",
+              "midwest",
+              "south"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "reserved",
+              "confirmed",
+              "completed"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "externalRef",
+          "locale",
+          "status",
+          "payload",
+          "createdAt"
+        ]
+      },
+      "ReservationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "confirmed",
+              "expired",
+              "released"
+            ]
+          },
+          "reservedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the hold lapses if not confirmed."
+          },
+          "confirmedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "reservedAt",
+          "expiresAt",
+          "confirmedAt"
+        ]
+      },
+      "ReservationResultDto": {
+        "type": "object",
+        "properties": {
+          "ticket": {
+            "$ref": "#/components/schemas/TicketDto"
+          },
+          "reservation": {
+            "$ref": "#/components/schemas/ReservationDto"
+          }
+        },
+        "required": [
+          "ticket",
+          "reservation"
+        ]
+      }
+    }
+  }
+}

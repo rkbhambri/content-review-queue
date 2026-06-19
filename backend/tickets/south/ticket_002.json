@@ -1,0 +1,7 @@
+{
+  "title": "Survey boundary conflict",
+  "category": "data-quality",
+  "priority": "high",
+  "submittedBy": "system",
+  "content": "Miami parcel survey overlaps the neighboring lot by a small margin."
+}

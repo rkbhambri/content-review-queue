@@ -1,0 +1,7 @@
+{
+  "title": "Mismatched square footage",
+  "category": "data-quality",
+  "priority": "medium",
+  "submittedBy": "agent-262",
+  "content": "Minneapolis listing square footage differs from assessor data by 18%."
+}

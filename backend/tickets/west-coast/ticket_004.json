@@ -1,0 +1,7 @@
+{
+  "title": "Duplicate parcel suspected",
+  "category": "data-quality",
+  "priority": "high",
+  "submittedBy": "system",
+  "content": "Two listings in Portland appear to reference the same parcel APN."
+}

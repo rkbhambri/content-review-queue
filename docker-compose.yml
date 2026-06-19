@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-review}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-review}
+      POSTGRES_DB: ${DATABASE_NAME:-review_queue}
+    ports:
+      # host:container — published on 5434 to avoid clashing with a local Postgres
+      - "${DATABASE_PORT:-5434}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-review} -d ${DATABASE_NAME:-review_queue}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DATABASE_HOST: db
+      # Internal connection on the Docker network — the container always
+      # listens on 5432; only the host-published port (above) changes.
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${DATABASE_USER:-review}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-review}
+      DATABASE_NAME: ${DATABASE_NAME:-review_queue}
+      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE:-true}
+      JWT_SECRET: ${JWT_SECRET:-super-secret-change-me}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      RESERVATION_TTL_MINUTES: ${RESERVATION_TTL_MINUTES:-1}
+      REAPER_INTERVAL_MS: ${REAPER_INTERVAL_MS:-15000}
+      CACHE_TTL_MS: ${CACHE_TTL_MS:-3000}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-30}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-60000}
+      SEED_ON_BOOT: ${SEED_ON_BOOT:-true}
+      GENERATE_TICKETS: ${GENERATE_TICKETS:-false}
+      GENERATE_INTERVAL_MS: ${GENERATE_INTERVAL_MS:-30000}
+    ports:
+      - "3000:3000"
+
+  ui:
+    build: ./ui
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata:
