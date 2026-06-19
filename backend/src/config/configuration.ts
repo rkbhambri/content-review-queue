@@ -27,7 +27,7 @@ export default (): IAppConfig => ({
     expiresIn: process.env.JWT_EXPIRES_IN ?? '8h',
   },
   reservation: {
-    ttlMinutes: toInt(process.env.RESERVATION_TTL_MINUTES, 1),
+    ttlMinutes: toInt(process.env.RESERVATION_TTL_MINUTES, 20),
     reaperIntervalMs: toInt(process.env.REAPER_INTERVAL_MS, 15000),
   },
   cache: {
