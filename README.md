@@ -420,16 +420,6 @@ All four suggested bonus areas are implemented:
 - **Tests** — unit + Postgres-backed integration tests for reservation and
   expiry logic.
 
-## How LLMs were used
-
-An LLM (Cursor) was used to accelerate scaffolding and boilerplate: the NestJS
-module/Docker wiring, the React UI components and CSS, the seed JSON files, and
-the first drafts of tests and this README. The architecture and the core
-decisions — the conditional-UPDATE reservation model, the two-layer expiry
-strategy, the normalized schema, the injectable clock for testability, and the
-in-process (no-Redis) infrastructure choices — were directed deliberately and
-reviewed line by line. No section is included that I cannot explain and defend.
-
 ## Roadmap
 
 - **Horizontal scaling.** Move the cache/rate-limiter/event bus to Redis and
