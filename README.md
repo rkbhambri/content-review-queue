@@ -438,9 +438,6 @@ All four suggested bonus areas are implemented:
 
 ## Walkthrough video
 
-A 2–3 minute demo covering the system, approach, and architecture.
+A demo covering the system, approach, and architecture.
 
-- **▶️ Video:** _TODO: add Loom (or equivalent) link here._
-- **Script / recording guide:** [`WALKTHROUGH.md`](WALKTHROUGH.md) — timed
-  segments and a setup checklist for login → browse → reserve → confirm →
-  auto-release, plus the real-time, persistence, metrics, and Swagger highlights.
+- **▶️ Video:** https://www.loom.com/share/12aeacf21e0047fd81e46024716ce577
