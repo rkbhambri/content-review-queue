@@ -30,7 +30,6 @@ back into the queue for someone else.
 - [Testing](#testing)
 - [Design decisions & trade-offs](#design-decisions--trade-offs)
 - [Bonus features](#bonus-features)
-- [How LLMs were used](#how-llms-were-used)
 - [Roadmap](#roadmap)
 
 ---
